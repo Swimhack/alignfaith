@@ -180,6 +180,7 @@ model Profile {
 
   // Six Pillars Self-Assessment
   pillarScores PillarScore[]
+  pillarResponses PillarResponse[]
 
   // Registration Reflections
   reflections Reflection[]
@@ -241,6 +242,24 @@ model PillarScore {
   updatedAt DateTime @updatedAt
 
   @@unique([profileId, pillar])
+}
+
+// Individual question responses for the Six Pillars assessment
+model PillarResponse {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  questionId String  // e.g., "spiritual_faith_centrality"
+  pillar     Pillar
+  value      Int     // 1-5 (1 = strongest alignment)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, questionId])
+  @@index([profileId])
+  @@index([pillar])
 }
 
 model Reflection {
