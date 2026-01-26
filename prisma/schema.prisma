@@ -1,0 +1,465 @@
+// Rooted Dating App - Database Schema
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MembershipTier {
+  FREE
+  TIER_1
+  TIER_2
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum RelationshipGoal {
+  MARRIAGE
+  SERIOUS_DATING
+  DISCERNING
+}
+
+enum MatchStatus {
+  PENDING
+  MATCHED
+  DECLINED
+  EXPIRED
+  UNMATCHED
+}
+
+enum Pillar {
+  SPIRITUAL
+  MENTAL
+  PHYSICAL
+  FINANCIAL
+  APPEARANCE
+  INTIMACY
+}
+
+enum AdminActionType {
+  USER_SUSPENDED
+  USER_BANNED
+  USER_WARNED
+  PHOTO_REJECTED
+  PHOTO_APPROVED
+  TIER_CHANGED
+  PROFILE_FLAGGED
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+
+  // Profile link
+  profile Profile?
+
+  // Auth & Role
+  role     Role           @default(USER)
+  accounts Account[]
+  sessions Session[]
+
+  // Membership
+  tier          MembershipTier @default(FREE)
+  tierExpiresAt DateTime?
+
+  // Invite system
+  invitedBy   User?       @relation("UserInvites", fields: [invitedById], references: [id])
+  invitedById String?
+  invitees    User[]      @relation("UserInvites")
+  inviteCode  InviteCode? @relation("UserInviteCode")
+
+  // Matching relationships
+  sentMatches     Match[] @relation("MatchSender")
+  receivedMatches Match[] @relation("MatchReceiver")
+
+  // Messaging
+  conversations ConversationParticipant[]
+  sentMessages  Message[]
+
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastActiveAt DateTime @default(now())
+
+  // Admin actions received
+  adminActionsReceived AdminAction[] @relation("AdminActionTarget")
+
+  @@index([email])
+  @@index([tier])
+  @@index([createdAt])
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== PROFILE ====================
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Info
+  firstName   String
+  lastName    String
+  displayName String?
+  dateOfBirth DateTime
+  gender      Gender
+
+  // Location
+  city      String
+  state     String
+  country   String @default("USA")
+  latitude  Float?
+  longitude Float?
+
+  // Bio & About
+  bio     String? @db.Text
+  aboutMe String? @db.Text
+
+  // Dating Preferences
+  seekingGender    Gender
+  ageMin           Int              @default(18)
+  ageMax           Int              @default(99)
+  maxDistance      Int              @default(100)
+  relationshipGoal RelationshipGoal @default(SERIOUS_DATING)
+
+  // Photos (hidden until mutual match)
+  photos Photo[]
+
+  // Six Pillars Self-Assessment
+  pillarScores PillarScore[]
+
+  // Registration Reflections
+  reflections Reflection[]
+
+  // Weekly Growth Posts
+  growthPosts GrowthPost[]
+
+  // Framework acknowledgments
+  hasReadBook          Boolean @default(false)
+  understandsFramework Boolean @default(false)
+  agreesToGuidelines   Boolean @default(false)
+  agreesToTerms        Boolean @default(false)
+
+  // Profile completion
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+
+  // Visibility
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city, state])
+  @@index([gender, seekingGender])
+  @@index([isActive])
+}
+
+model Photo {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  url       String
+  publicId  String?
+  isPrimary Boolean @default(false)
+  order     Int     @default(0)
+
+  // Moderation
+  isApproved  Boolean   @default(false)
+  moderatedAt DateTime?
+  moderatedBy String?
+
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+model PillarScore {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  pillar    Pillar
+  selfScore Int
+  notes     String? @db.Text
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, pillar])
+}
+
+model Reflection {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  questionId Int
+  answer     String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, questionId])
+}
+
+model GrowthPost {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  pillar    Pillar
+  content   String   @db.Text
+  imageUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([pillar])
+  @@index([createdAt])
+}
+
+// ==================== MATCHING ====================
+
+model Match {
+  id String @id @default(cuid())
+
+  senderId String
+  sender   User   @relation("MatchSender", fields: [senderId], references: [id])
+
+  receiverId String
+  receiver   User   @relation("MatchReceiver", fields: [receiverId], references: [id])
+
+  status MatchStatus @default(PENDING)
+
+  // When mutual match occurs
+  matchedAt DateTime?
+
+  // Conversation link (created on mutual match)
+  conversation Conversation?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([senderId, status])
+  @@index([receiverId, status])
+}
+
+// ==================== MESSAGING ====================
+
+model Conversation {
+  id String @id @default(cuid())
+
+  // Link to match
+  matchId String @unique
+  match   Match  @relation(fields: [matchId], references: [id])
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  lastMessageAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id String @id @default(cuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Read status
+  lastReadAt DateTime?
+
+  // Mute within conversation
+  isMuted Boolean @default(false)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
+
+  content String @db.Text
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// ==================== INVITE SYSTEM ====================
+
+model InviteCode {
+  id   String @id @default(cuid())
+  code String @unique
+
+  // Owner of this invite code
+  ownerId String @unique
+  owner   User   @relation("UserInviteCode", fields: [ownerId], references: [id])
+
+  // Usage tracking
+  usageCount Int  @default(0)
+  maxUses    Int?
+
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([code])
+}
+
+model WaitlistEntry {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  firstName String?
+  lastName  String?
+
+  // Referral
+  referralCode String?
+
+  // Status
+  isApproved Boolean   @default(false)
+  approvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([isApproved])
+}
+
+// ==================== ADMIN ====================
+
+model AdminAction {
+  id String @id @default(cuid())
+
+  targetId String
+  target   User   @relation("AdminActionTarget", fields: [targetId], references: [id])
+
+  adminId String
+  action  AdminActionType
+  reason  String?         @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([targetId])
+  @@index([adminId])
+}
+
+model Report {
+  id String @id @default(cuid())
+
+  reporterId String
+  reportedId String
+
+  reason  String
+  details String? @db.Text
+
+  isReviewed Boolean   @default(false)
+  reviewedAt DateTime?
+  reviewedBy String?
+  resolution String?
+
+  createdAt DateTime @default(now())
+
+  @@index([reportedId])
+  @@index([isReviewed])
+}
+
+// ==================== FOUNDER FEEDBACK ====================
+
+model Feedback {
+  id String @id @default(cuid())
+
+  // Sender info (optional - can be anonymous)
+  name  String?
+  email String?
+
+  // Feedback content
+  subject  String
+  message  String  @db.Text
+  category String? // bug, feature, design, general
+
+  // Status tracking
+  isRead   Boolean   @default(false)
+  readAt   DateTime?
+  response String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt])
+}
