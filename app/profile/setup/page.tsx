@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ArrowLeft, ArrowRight, Check, User, MapPin, Heart, Loader2, Church, Brain, Dumbbell, Wallet, Sparkles } from 'lucide-react'
+import { PILLAR_CONFIGS, ASSESSMENT_INSTRUCTION, PillarType } from '@/lib/pillarQuestions'
 
 const US_STATES = [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -18,14 +19,26 @@ const US_STATES = [
     'Wisconsin', 'Wyoming'
 ]
 
-const PILLARS = [
-    { id: 'SPIRITUAL', name: 'Spiritual', icon: Church, color: '#4F46E5', description: 'Your faith foundation and relationship with God.' },
-    { id: 'MENTAL', name: 'Mental', icon: Brain, color: '#0891B2', description: 'Emotional intelligence and clarity of thought.' },
-    { id: 'PHYSICAL', name: 'Physical', icon: Dumbbell, color: '#059669', description: 'Body stewardship, health, and discipline.' },
-    { id: 'FINANCIAL', name: 'Financial', icon: Wallet, color: '#CA8A04', description: 'Stewardship of resources and financial wisdom.' },
-    { id: 'APPEARANCE', name: 'Appearance', icon: Sparkles, color: '#D946EF', description: 'Presenting yourself with dignity and intention.' },
-    { id: 'INTIMACY', name: 'Intimacy', icon: Heart, color: '#E11D48', description: 'Healthy boundaries and relational readiness.' },
-]
+const PILLAR_ICONS: Record<PillarType, any> = {
+    SPIRITUAL: Church,
+    MENTAL: Brain,
+    PHYSICAL: Dumbbell,
+    FINANCIAL: Wallet,
+    APPEARANCE: Sparkles,
+    INTIMACY: Heart,
+}
+
+const PILLAR_COLORS: Record<PillarType, string> = {
+    SPIRITUAL: '#4F46E5',
+    MENTAL: '#0891B2',
+    PHYSICAL: '#059669',
+    FINANCIAL: '#CA8A04',
+    APPEARANCE: '#D946EF',
+    INTIMACY: '#E11D48',
+}
+
+// Step structure: About You, 6 Pillars, Location, Preferences = 9 steps
+const TOTAL_STEPS = 9
 
 export default function ProfileSetupPage() {
     const { data: session, status, update } = useSession()
@@ -34,6 +47,7 @@ export default function ProfileSetupPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    // Basic info
     const [formData, setFormData] = useState({
         dateOfBirth: '',
         gender: '',
@@ -42,15 +56,10 @@ export default function ProfileSetupPage() {
         state: '',
         bio: '',
         relationshipGoal: 'SERIOUS_DATING',
-        pillarScores: {
-            SPIRITUAL: 5,
-            MENTAL: 5,
-            PHYSICAL: 5,
-            FINANCIAL: 5,
-            APPEARANCE: 5,
-            INTIMACY: 5,
-        }
     })
+
+    // Pillar responses: { questionId: value (1-5) }
+    const [pillarResponses, setPillarResponses] = useState<Record<string, number>>({})
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -63,20 +72,22 @@ export default function ProfileSetupPage() {
         setError(null)
     }
 
-    const updatePillarScore = (pillar: string, score: number) => {
-        setFormData(prev => ({
-            ...prev,
-            pillarScores: {
-                ...prev.pillarScores,
-                [pillar]: score
-            }
-        }))
+    const updatePillarResponse = (questionId: string, value: number) => {
+        setPillarResponses(prev => ({ ...prev, [questionId]: value }))
         setError(null)
+    }
+
+    // Get pillar config for current step (steps 2-7 are pillars)
+    const getCurrentPillar = () => {
+        if (currentStep >= 2 && currentStep <= 7) {
+            return PILLAR_CONFIGS[currentStep - 2]
+        }
+        return null
     }
 
     const validateStep = (step: number): boolean => {
         switch (step) {
-            case 1:
+            case 1: // About You
                 if (!formData.dateOfBirth) {
                     setError('Date of birth is required')
                     return false
@@ -91,10 +102,15 @@ export default function ProfileSetupPage() {
                     return false
                 }
                 return true
-            case 2:
-                // Pillar scores are defaults (5), so always valid for now
+            case 2: case 3: case 4: case 5: case 6: case 7: // Pillar steps
+                const pillar = PILLAR_CONFIGS[step - 2]
+                const unanswered = pillar.questions.filter(q => !pillarResponses[q.id])
+                if (unanswered.length > 0) {
+                    setError(`Please answer all questions for ${pillar.name}`)
+                    return false
+                }
                 return true
-            case 3:
+            case 8: // Location
                 if (!formData.city.trim()) {
                     setError('City is required')
                     return false
@@ -104,7 +120,7 @@ export default function ProfileSetupPage() {
                     return false
                 }
                 return true
-            case 4:
+            case 9: // Preferences
                 if (!formData.seekingGender) {
                     setError('Please select who you are looking for')
                     return false
@@ -130,7 +146,7 @@ export default function ProfileSetupPage() {
     }
 
     const nextStep = () => {
-        if (validateStep(currentStep) && currentStep < 4) {
+        if (validateStep(currentStep) && currentStep < TOTAL_STEPS) {
             setCurrentStep(currentStep + 1)
             setError(null)
             window.scrollTo(0, 0)
@@ -153,11 +169,16 @@ export default function ProfileSetupPage() {
         setError(null)
 
         try {
-            // Format pillar scores for API
-            const formattedPillarScores = Object.entries(formData.pillarScores).map(([pillar, selfScore]) => ({
-                pillar,
-                selfScore
-            }))
+            // Format pillar responses for API
+            const formattedResponses = Object.entries(pillarResponses).map(([questionId, value]) => {
+                // Find which pillar this question belongs to
+                const pillar = PILLAR_CONFIGS.find(p => p.questions.some(q => q.id === questionId))
+                return {
+                    questionId,
+                    pillar: pillar?.id,
+                    value
+                }
+            })
 
             const response = await fetch('/api/profile/complete', {
                 method: 'POST',
@@ -170,7 +191,7 @@ export default function ProfileSetupPage() {
                     state: formData.state,
                     bio: formData.bio.trim(),
                     relationshipGoal: formData.relationshipGoal,
-                    pillarScores: formattedPillarScores,
+                    pillarResponses: formattedResponses,
                 }),
             })
 
@@ -209,12 +230,17 @@ export default function ProfileSetupPage() {
         return null
     }
 
-    const steps = [
-        { id: 1, name: 'About You', icon: User },
-        { id: 2, name: 'Assessment', icon: Dumbbell },
-        { id: 3, name: 'Location', icon: MapPin },
-        { id: 4, name: 'Preferences', icon: Heart },
-    ]
+    const getStepName = (step: number): string => {
+        if (step === 1) return 'About You'
+        if (step >= 2 && step <= 7) return PILLAR_CONFIGS[step - 2].name
+        if (step === 8) return 'Location'
+        if (step === 9) return 'Preferences'
+        return ''
+    }
+
+    const currentPillar = getCurrentPillar()
+    const PillarIcon = currentPillar ? PILLAR_ICONS[currentPillar.id] : null
+    const pillarColor = currentPillar ? PILLAR_COLORS[currentPillar.id] : '#4F46E5'
 
     return (
         <>
@@ -230,32 +256,40 @@ export default function ProfileSetupPage() {
                                     color: 'var(--color-primary)',
                                     marginBottom: 'var(--space-2)',
                                 }}>
-                                    Your Relational Fitness Journey
+                                    Six Pillars Assessment
                                 </h1>
                                 <p style={{ color: 'var(--color-slate)' }}>
-                                    Everything starts with your personal assessment
+                                    {ASSESSMENT_INSTRUCTION}
                                 </p>
                             </div>
 
-                            {/* Progress Steps */}
-                            <div className="progress-steps">
-                                {steps.map((step) => (
-                                    <div
-                                        key={step.id}
-                                        className={`progress-step ${currentStep > step.id ? 'progress-step--completed' :
-                                            currentStep === step.id ? 'progress-step--active' :
-                                                'progress-step--pending'
-                                            }`}
-                                    >
-                                        <div className="progress-step__circle">
-                                            {currentStep > step.id ? <Check size={18} /> : step.id}
-                                        </div>
-                                        <span className="progress-step__label">{step.name}</span>
-                                    </div>
-                                ))}
+                            {/* Progress Bar */}
+                            <div style={{ marginBottom: 'var(--space-6)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-slate)' }}>
+                                        Step {currentStep} of {TOTAL_STEPS}
+                                    </span>
+                                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: pillarColor }}>
+                                        {getStepName(currentStep)}
+                                    </span>
+                                </div>
+                                <div style={{
+                                    height: '8px',
+                                    backgroundColor: 'var(--color-rose)',
+                                    borderRadius: 'var(--radius-full)',
+                                    overflow: 'hidden',
+                                }}>
+                                    <div style={{
+                                        height: '100%',
+                                        width: `${(currentStep / TOTAL_STEPS) * 100}%`,
+                                        backgroundColor: pillarColor,
+                                        borderRadius: 'var(--radius-full)',
+                                        transition: 'width 0.3s ease',
+                                    }} />
+                                </div>
                             </div>
 
-                            <div className="card" style={{ marginTop: 'var(--space-8)' }}>
+                            <div className="card" style={{ marginTop: 'var(--space-4)' }}>
                                 <form onSubmit={handleSubmit}>
                                     {error && (
                                         <div style={{
@@ -293,119 +327,106 @@ export default function ProfileSetupPage() {
                                             <div className="form-group">
                                                 <label className="form-label">I am a</label>
                                                 <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
-                                                    <label style={{
-                                                        flex: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: 'var(--space-2)',
-                                                        padding: 'var(--space-4)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        border: `2px solid ${formData.gender === 'MALE' ? 'var(--color-primary)' : 'var(--color-rose)'}`,
-                                                        backgroundColor: formData.gender === 'MALE' ? 'var(--color-blush)' : 'transparent',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                    }}>
-                                                        <input
-                                                            type="radio"
-                                                            name="gender"
-                                                            value="MALE"
-                                                            checked={formData.gender === 'MALE'}
-                                                            onChange={(e) => updateFormData('gender', e.target.value)}
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                        Man
-                                                    </label>
-                                                    <label style={{
-                                                        flex: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: 'var(--space-2)',
-                                                        padding: 'var(--space-4)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        border: `2px solid ${formData.gender === 'FEMALE' ? 'var(--color-primary)' : 'var(--color-rose)'}`,
-                                                        backgroundColor: formData.gender === 'FEMALE' ? 'var(--color-blush)' : 'transparent',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                    }}>
-                                                        <input
-                                                            type="radio"
-                                                            name="gender"
-                                                            value="FEMALE"
-                                                            checked={formData.gender === 'FEMALE'}
-                                                            onChange={(e) => updateFormData('gender', e.target.value)}
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                        Woman
-                                                    </label>
+                                                    {['MALE', 'FEMALE'].map(g => (
+                                                        <label key={g} style={{
+                                                            flex: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            padding: 'var(--space-4)',
+                                                            borderRadius: 'var(--radius-md)',
+                                                            border: `2px solid ${formData.gender === g ? 'var(--color-primary)' : 'var(--color-rose)'}`,
+                                                            backgroundColor: formData.gender === g ? 'var(--color-blush)' : 'transparent',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                        }}>
+                                                            <input
+                                                                type="radio"
+                                                                name="gender"
+                                                                value={g}
+                                                                checked={formData.gender === g}
+                                                                onChange={(e) => updateFormData('gender', e.target.value)}
+                                                                style={{ display: 'none' }}
+                                                            />
+                                                            {g === 'MALE' ? 'Man' : 'Woman'}
+                                                        </label>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Step 2: Pillar Assessment */}
-                                    {currentStep === 2 && (
+                                    {/* Steps 2-7: Pillar Assessments */}
+                                    {currentPillar && PillarIcon && (
                                         <div>
-                                            <h2 style={{ marginBottom: 'var(--space-2)', textAlign: 'center' }}>
-                                                Relational Fitness Assessment
-                                            </h2>
-                                            <p style={{
-                                                textAlign: 'center',
-                                                color: 'var(--color-slate)',
-                                                marginBottom: 'var(--space-8)'
-                                            }}>
-                                                Rate your current status in each pillar (1-10). Be honest: this is for your growth.
-                                            </p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
+                                                <div style={{
+                                                    width: '60px',
+                                                    height: '60px',
+                                                    borderRadius: 'var(--radius-lg)',
+                                                    backgroundColor: `${pillarColor}15`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: pillarColor,
+                                                }}>
+                                                    <PillarIcon size={30} />
+                                                </div>
+                                                <div>
+                                                    <h2 style={{ marginBottom: 'var(--space-1)' }}>{currentPillar.name}</h2>
+                                                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-slate)', marginBottom: 0 }}>
+                                                        {currentPillar.description}
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-                                                {PILLARS.map((pillar) => (
-                                                    <div key={pillar.id} style={{
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+                                                {currentPillar.questions.map((question, qIndex) => (
+                                                    <div key={question.id} style={{
                                                         padding: 'var(--space-4)',
                                                         backgroundColor: 'rgba(255, 255, 255, 0.5)',
                                                         borderRadius: 'var(--radius-lg)',
-                                                        border: '1px solid var(--color-rose-light)',
+                                                        border: pillarResponses[question.id] ? `2px solid ${pillarColor}` : '1px solid var(--color-rose-light)',
                                                     }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-                                                            <div style={{
-                                                                width: '40px',
-                                                                height: '40px',
-                                                                borderRadius: 'var(--radius-md)',
-                                                                backgroundColor: `${pillar.color}15`,
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                color: pillar.color,
-                                                            }}>
-                                                                <pillar.icon size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <h4 style={{ marginBottom: 0 }}>{pillar.name} Fitness</h4>
-                                                                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-slate)', marginBottom: 0 }}>
-                                                                    {pillar.description}
-                                                                </p>
-                                                            </div>
-                                                            <div style={{ marginLeft: 'auto', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-primary)' }}>
-                                                                {formData.pillarScores[pillar.id as keyof typeof formData.pillarScores]}
-                                                            </div>
-                                                        </div>
-
-                                                        <input
-                                                            type="range"
-                                                            min="1"
-                                                            max="10"
-                                                            step="1"
-                                                            value={formData.pillarScores[pillar.id as keyof typeof formData.pillarScores]}
-                                                            onChange={(e) => updatePillarScore(pillar.id, parseInt(e.target.value))}
-                                                            style={{
-                                                                width: '100%',
-                                                                cursor: 'pointer',
-                                                                accentColor: 'var(--color-primary)',
-                                                            }}
-                                                        />
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-slate)' }}>
-                                                            <span>Room for Growth</span>
-                                                            <span>Disciplined</span>
+                                                        <p style={{
+                                                            fontWeight: 600,
+                                                            marginBottom: 'var(--space-3)',
+                                                            color: 'var(--color-charcoal)',
+                                                        }}>
+                                                            {qIndex + 1}. {question.title}
+                                                        </p>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                                                            {question.options.map((option) => (
+                                                                <label
+                                                                    key={option.value}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 'var(--space-3)',
+                                                                        padding: 'var(--space-3)',
+                                                                        borderRadius: 'var(--radius-md)',
+                                                                        backgroundColor: pillarResponses[question.id] === option.value ? `${pillarColor}15` : 'transparent',
+                                                                        border: pillarResponses[question.id] === option.value ? `1px solid ${pillarColor}` : '1px solid transparent',
+                                                                        cursor: 'pointer',
+                                                                        transition: 'all 0.2s',
+                                                                    }}
+                                                                >
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={question.id}
+                                                                        value={option.value}
+                                                                        checked={pillarResponses[question.id] === option.value}
+                                                                        onChange={() => updatePillarResponse(question.id, option.value)}
+                                                                        style={{ accentColor: pillarColor }}
+                                                                    />
+                                                                    <span style={{
+                                                                        fontSize: 'var(--text-sm)',
+                                                                        color: pillarResponses[question.id] === option.value ? pillarColor : 'var(--color-charcoal)',
+                                                                    }}>
+                                                                        {option.label}
+                                                                    </span>
+                                                                </label>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -413,8 +434,8 @@ export default function ProfileSetupPage() {
                                         </div>
                                     )}
 
-                                    {/* Step 3: Location */}
-                                    {currentStep === 3 && (
+                                    {/* Step 8: Location */}
+                                    {currentStep === 8 && (
                                         <div>
                                             <h2 style={{ marginBottom: 'var(--space-6)', textAlign: 'center' }}>
                                                 Your Location
@@ -455,7 +476,7 @@ export default function ProfileSetupPage() {
                                                     className="form-input form-textarea"
                                                     value={formData.bio}
                                                     onChange={(e) => updateFormData('bio', e.target.value)}
-                                                    placeholder="Tell others a bit about your growth journey..."
+                                                    placeholder="Tell others a bit about your faith journey..."
                                                     disabled={isLoading}
                                                     rows={4}
                                                 />
@@ -463,8 +484,8 @@ export default function ProfileSetupPage() {
                                         </div>
                                     )}
 
-                                    {/* Step 4: Preferences */}
-                                    {currentStep === 4 && (
+                                    {/* Step 9: Preferences */}
+                                    {currentStep === 9 && (
                                         <div>
                                             <h2 style={{ marginBottom: 'var(--space-6)', textAlign: 'center' }}>
                                                 Your Preferences
@@ -473,50 +494,29 @@ export default function ProfileSetupPage() {
                                             <div className="form-group">
                                                 <label className="form-label">I am looking for a</label>
                                                 <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
-                                                    <label style={{
-                                                        flex: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: 'var(--space-2)',
-                                                        padding: 'var(--space-4)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        border: `2px solid ${formData.seekingGender === 'MALE' ? 'var(--color-primary)' : 'var(--color-rose)'}`,
-                                                        backgroundColor: formData.seekingGender === 'MALE' ? 'var(--color-blush)' : 'transparent',
-                                                        cursor: 'pointer',
-                                                    }}>
-                                                        <input
-                                                            type="radio"
-                                                            name="seekingGender"
-                                                            value="MALE"
-                                                            checked={formData.seekingGender === 'MALE'}
-                                                            onChange={(e) => updateFormData('seekingGender', e.target.value)}
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                        Man
-                                                    </label>
-                                                    <label style={{
-                                                        flex: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: 'var(--space-2)',
-                                                        padding: 'var(--space-4)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        border: `2px solid ${formData.seekingGender === 'FEMALE' ? 'var(--color-primary)' : 'var(--color-rose)'}`,
-                                                        backgroundColor: formData.seekingGender === 'FEMALE' ? 'var(--color-blush)' : 'transparent',
-                                                        cursor: 'pointer',
-                                                    }}>
-                                                        <input
-                                                            type="radio"
-                                                            name="seekingGender"
-                                                            value="FEMALE"
-                                                            checked={formData.seekingGender === 'FEMALE'}
-                                                            onChange={(e) => updateFormData('seekingGender', e.target.value)}
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                        Woman
-                                                    </label>
+                                                    {['MALE', 'FEMALE'].map(g => (
+                                                        <label key={g} style={{
+                                                            flex: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            padding: 'var(--space-4)',
+                                                            borderRadius: 'var(--radius-md)',
+                                                            border: `2px solid ${formData.seekingGender === g ? 'var(--color-primary)' : 'var(--color-rose)'}`,
+                                                            backgroundColor: formData.seekingGender === g ? 'var(--color-blush)' : 'transparent',
+                                                            cursor: 'pointer',
+                                                        }}>
+                                                            <input
+                                                                type="radio"
+                                                                name="seekingGender"
+                                                                value={g}
+                                                                checked={formData.seekingGender === g}
+                                                                onChange={(e) => updateFormData('seekingGender', e.target.value)}
+                                                                style={{ display: 'none' }}
+                                                            />
+                                                            {g === 'MALE' ? 'Man' : 'Woman'}
+                                                        </label>
+                                                    ))}
                                                 </div>
                                             </div>
 
@@ -559,12 +559,11 @@ export default function ProfileSetupPage() {
                                             <div />
                                         )}
 
-                                        {currentStep < 4 ? (
+                                        {currentStep < TOTAL_STEPS ? (
                                             <button
                                                 type="button"
                                                 onClick={nextStep}
                                                 className="btn btn--primary"
-                                                disabled={isLoading}
                                             >
                                                 Continue
                                                 <ArrowRight size={18} />

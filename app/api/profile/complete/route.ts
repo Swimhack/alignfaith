@@ -6,6 +6,19 @@ import { authOptions } from '@/lib/auth'
 import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors'
 import { calculateAge, isValidAge } from '@/lib/security'
 
+// New schema with pillarResponses (30 individual questions)
+const pillarResponseSchema = z.object({
+  questionId: z.string(),
+  pillar: z.enum(['SPIRITUAL', 'MENTAL', 'PHYSICAL', 'FINANCIAL', 'APPEARANCE', 'INTIMACY']),
+  value: z.number().min(1).max(5),
+})
+
+// Legacy schema for backwards compatibility
+const legacyPillarScoreSchema = z.object({
+  pillar: z.enum(['SPIRITUAL', 'MENTAL', 'PHYSICAL', 'FINANCIAL', 'APPEARANCE', 'INTIMACY']),
+  selfScore: z.number().min(1).max(10),
+})
+
 const profileCompleteSchema = z.object({
   dateOfBirth: z.string().refine((val) => {
     const date = new Date(val)
@@ -17,10 +30,10 @@ const profileCompleteSchema = z.object({
   state: z.string().min(1, 'State is required').max(50),
   bio: z.string().max(1000).optional(),
   relationshipGoal: z.enum(['MARRIAGE', 'SERIOUS_DATING', 'DISCERNING']),
-  pillarScores: z.array(z.object({
-    pillar: z.enum(['SPIRITUAL', 'MENTAL', 'PHYSICAL', 'FINANCIAL', 'APPEARANCE', 'INTIMACY']),
-    selfScore: z.number().min(1).max(10),
-  })).min(6, 'All 6 pillars must be scored'),
+  // New: Individual question responses (30 questions)
+  pillarResponses: z.array(pillarResponseSchema).optional(),
+  // Legacy: Simple pillar scores (6 scores) - for backwards compatibility
+  pillarScores: z.array(legacyPillarScoreSchema).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -34,6 +47,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = profileCompleteSchema.parse(body)
 
+    // Validate that we have either pillarResponses or pillarScores
+    if (!data.pillarResponses?.length && !data.pillarScores?.length) {
+      throw new ValidationError('Assessment responses are required')
+    }
+
     // Find existing profile
     const existingProfile = await prisma.profile.findUnique({
       where: { userId: session.user.id },
@@ -43,7 +61,7 @@ export async function POST(req: NextRequest) {
       throw new ValidationError('Profile not found. Please register first.')
     }
 
-    // Update profile and upsert pillar scores in a transaction
+    // Update profile and save responses in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Update basic profile info
       const profile = await tx.profile.update({
@@ -61,24 +79,80 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // Update or create pillar scores
-      for (const score of data.pillarScores) {
-        await tx.pillarScore.upsert({
-          where: {
-            profileId_pillar: {
+      // Handle new pillarResponses format (preferred)
+      if (data.pillarResponses?.length) {
+        for (const response of data.pillarResponses) {
+          await tx.pillarResponse.upsert({
+            where: {
+              profileId_questionId: {
+                profileId: profile.id,
+                questionId: response.questionId,
+              },
+            },
+            update: {
+              value: response.value,
+              pillar: response.pillar,
+            },
+            create: {
+              profileId: profile.id,
+              questionId: response.questionId,
+              pillar: response.pillar,
+              value: response.value,
+            },
+          })
+        }
+
+        // Calculate and store pillar scores (average of question values)
+        const pillarAverages: Record<string, { total: number; count: number }> = {}
+        for (const response of data.pillarResponses) {
+          if (!pillarAverages[response.pillar]) {
+            pillarAverages[response.pillar] = { total: 0, count: 0 }
+          }
+          pillarAverages[response.pillar].total += response.value
+          pillarAverages[response.pillar].count += 1
+        }
+
+        for (const [pillar, { total, count }] of Object.entries(pillarAverages)) {
+          // Convert 1-5 scale to 1-10 scale for backwards compatibility
+          const avgScore = Math.round((total / count) * 2)
+          await tx.pillarScore.upsert({
+            where: {
+              profileId_pillar: {
+                profileId: profile.id,
+                pillar: pillar as any,
+              },
+            },
+            update: {
+              selfScore: avgScore,
+            },
+            create: {
+              profileId: profile.id,
+              pillar: pillar as any,
+              selfScore: avgScore,
+            },
+          })
+        }
+      }
+      // Handle legacy pillarScores format
+      else if (data.pillarScores?.length) {
+        for (const score of data.pillarScores) {
+          await tx.pillarScore.upsert({
+            where: {
+              profileId_pillar: {
+                profileId: profile.id,
+                pillar: score.pillar,
+              },
+            },
+            update: {
+              selfScore: score.selfScore,
+            },
+            create: {
               profileId: profile.id,
               pillar: score.pillar,
+              selfScore: score.selfScore,
             },
-          },
-          update: {
-            selfScore: score.selfScore,
-          },
-          create: {
-            profileId: profile.id,
-            pillar: score.pillar,
-            selfScore: score.selfScore,
-          },
-        })
+          })
+        }
       }
 
       return profile
