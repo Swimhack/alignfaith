@@ -27,7 +27,7 @@ export default function Hero() {
                         </div>
 
                         <h1 className="hero__title hero__title--brand">
-                            ROOTED ALIGNMENT
+                            ALIGN
                         </h1>
                         <p className="hero__tagline">The Relational Fitness Ecosystem for intentional believers.</p>
 

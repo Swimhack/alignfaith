@@ -77,7 +77,7 @@ export default function Header() {
                         height={130}
                         priority
                     />
-                    <span className="header__brand">ROOTED ALIGNMENT</span>
+                    <span className="header__brand">ALIGN</span>
                 </Link>
 
                 {/* Desktop Navigation */}
