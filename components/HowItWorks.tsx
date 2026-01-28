@@ -28,7 +28,7 @@ export default function HowItWorks() {
         <section id="how-it-works" className="section section--white">
             <div className="container">
                 <div className="text-center" style={{ marginBottom: 'var(--space-12)' }}>
-                    <h2 style={{ marginBottom: 'var(--space-4)' }}>How Rooted Works</h2>
+                    <h2 style={{ marginBottom: 'var(--space-4)' }}>How Align Works</h2>
                     <p style={{
                         fontSize: 'var(--text-lg)',
                         color: 'var(--color-slate)',

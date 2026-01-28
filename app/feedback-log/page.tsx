@@ -113,7 +113,7 @@ export default function FeedbackLogPage() {
                 </div>
 
                 <div className="feedback-footer">
-                    <Link href="/">← Back to Rooted</Link>
+                    <Link href="/">← Back to Align</Link>
                 </div>
             </div>
         </div>

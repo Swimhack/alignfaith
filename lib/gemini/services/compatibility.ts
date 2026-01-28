@@ -66,7 +66,7 @@ function buildCompatibilityPrompt(
   profile1: UserProfileData,
   profile2: UserProfileData
 ): string {
-  return `You are an expert relationship counselor analyzing compatibility between two individuals on a Christian dating platform called Rooted. The platform uses the "Six Pillars" framework for personal development and relationship readiness.
+  return `You are an expert relationship counselor analyzing compatibility between two individuals on a Christian dating platform called Align. The platform uses the "Six Pillars" framework for personal development and relationship readiness.
 
 The Six Pillars are:
 1. SPIRITUAL - Faith, prayer life, spiritual maturity

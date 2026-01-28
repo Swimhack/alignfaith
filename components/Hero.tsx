@@ -32,7 +32,7 @@ export default function Hero() {
                         <p className="hero__tagline">The Relational Fitness Ecosystem for intentional believers.</p>
 
                         <p className="hero__description">
-                            Rooted is a <strong>Preparation-First</strong> community. We equip you to become the person you are looking for through our Six Pillar framework before you align with a partner.
+                            Align is a <strong>Preparation-First</strong> community. We equip you to become the person you are looking for through our Six Pillar framework before you align with a partner.
                         </p>
 
                         <div className="hero__actions">

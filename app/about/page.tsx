@@ -13,7 +13,7 @@ export default function AboutPage() {
                 <section className="section section--primary">
                     <div className="container">
                         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-                            <h1 style={{ marginBottom: 'var(--space-4)' }}>About Rooted Alignment</h1>
+                            <h1 style={{ marginBottom: 'var(--space-4)' }}>About Align</h1>
                             <p style={{
                                 fontSize: 'var(--text-xl)',
                                 opacity: 0.9,
@@ -25,7 +25,7 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* What is Rooted */}
+                {/* What is Align */}
                 <section className="section section--cream">
                     <div className="container">
                         <div style={{
@@ -36,10 +36,10 @@ export default function AboutPage() {
                         }}>
                             <div>
                                 <h2 style={{ marginBottom: 'var(--space-4)' }}>
-                                    What is Rooted Alignment?
+                                    What is Align?
                                 </h2>
                                 <p style={{ fontSize: 'var(--text-lg)', color: 'var(--color-slate)', marginBottom: 'var(--space-4)' }}>
-                                    Rooted Alignment is a Christian-based relationship platform for people who want to grow in
+                                    Align is a Christian-based relationship platform for people who want to grow in
                                     faith, character, and readiness before engaging with others.
                                 </p>
                                 <p style={{ color: 'var(--color-slate)', marginBottom: 'var(--space-4)' }}>
@@ -83,7 +83,7 @@ export default function AboutPage() {
                             <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
                                 <h2 style={{ marginBottom: 'var(--space-4)' }}>The Relationship Fitness Book</h2>
                                 <p style={{ fontSize: 'var(--text-lg)', color: 'var(--color-slate)' }}>
-                                    The foundation that makes Rooted Alignment possible.
+                                    The foundation that makes Align possible.
                                 </p>
                             </div>
 
@@ -129,7 +129,7 @@ export default function AboutPage() {
                 <section className="section section--white">
                     <div className="container">
                         <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-                            <h2>Why Rooted Alignment is Different</h2>
+                            <h2>Why Align is Different</h2>
                         </div>
 
                         <div className="grid grid--3">

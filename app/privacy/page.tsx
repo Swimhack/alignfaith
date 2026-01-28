@@ -27,12 +27,12 @@ export default function PrivacyPage() {
                         }}>
                             <h2>1. Introduction</h2>
                             <p>
-                                Rooted Alignment ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy
+                                Align ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy
                                 explains how we collect, use, disclose, and safeguard your information when you use our
                                 platform.
                             </p>
                             <p>
-                                By using Rooted Alignment, you consent to the data practices described in this policy.
+                                By using Align, you consent to the data practices described in this policy.
                             </p>
 
                             <h2>2. Information We Collect</h2>
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
 
                             <h2>5. Photo Privacy</h2>
                             <p>
-                                Rooted Alignment has a unique approach to photos:
+                                Align has a unique approach to photos:
                             </p>
                             <ul>
                                 <li>Photos are not visible during initial discovery (Stage One)</li>
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
 
                             <h2>11. Children's Privacy</h2>
                             <p>
-                                Rooted Alignment is not intended for individuals under 18 years of age. We do not knowingly collect
+                                Align is not intended for individuals under 18 years of age. We do not knowingly collect
                                 information from children. If we learn we have collected information from a child, we will
                                 delete it promptly.
                             </p>

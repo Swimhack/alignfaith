@@ -19,7 +19,7 @@ export default function CorePrinciples() {
                         maxWidth: '600px',
                         margin: '0 auto',
                     }}>
-                        These truths guide everything we do at Rooted.
+                        These truths guide everything we do at Align.
                     </p>
                 </div>
 

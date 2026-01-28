@@ -24,7 +24,7 @@ export default function Logo({ className = '', size = 'md', showText = true }: L
             {/* Logo Image */}
             <Image
                 src="/images/logo.png"
-                alt="Rooted Alignment Logo"
+                alt="Align Logo"
                 width={width}
                 height={height}
                 className="logo__icon"
@@ -51,7 +51,7 @@ export default function Logo({ className = '', size = 'md', showText = true }: L
                         backgroundClip: 'text',
                     }}
                 >
-                    Rooted Alignment
+                    Align
                 </span>
             )}
         </div>

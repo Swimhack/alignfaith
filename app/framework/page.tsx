@@ -76,7 +76,7 @@ export default function FrameworkPage() {
                                 </p>
                                 <p style={{ color: 'var(--color-slate)' }}>
                                     These Six Pillars became the foundation of the Relationship Fitness book and the
-                                    entire Rooted platform experience.
+                                    entire Align platform experience.
                                 </p>
                             </div>
 
@@ -106,7 +106,7 @@ export default function FrameworkPage() {
                         <div className="text-center" style={{ marginBottom: 'var(--space-12)' }}>
                             <h2 style={{ marginBottom: 'var(--space-4)' }}>Core Principles</h2>
                             <p style={{ fontSize: 'var(--text-lg)', color: 'var(--color-slate)', maxWidth: '600px', margin: '0 auto' }}>
-                                These truths guide the Relationship Fitness framework and everything we do at Rooted.
+                                These truths guide the Relationship Fitness framework and everything we do at Align.
                             </p>
                         </div>
 
@@ -155,7 +155,7 @@ export default function FrameworkPage() {
                     <div className="container">
                         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                             <h2 className="text-center" style={{ marginBottom: 'var(--space-8)' }}>
-                                How The Pillars Work on Rooted
+                                How The Pillars Work on Align
                             </h2>
 
                             <div style={{
@@ -202,7 +202,7 @@ export default function FrameworkPage() {
                     <div className="container text-center">
                         <h2 style={{ marginBottom: 'var(--space-4)' }}>Experience the Framework</h2>
                         <p style={{ fontSize: 'var(--text-lg)', opacity: 0.9, marginBottom: 'var(--space-6)', maxWidth: '600px', margin: '0 auto var(--space-6)' }}>
-                            Join Rooted and begin your journey of intentional preparation.
+                            Join Align and begin your journey of intentional preparation.
                         </p>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
                             <Link href="/register" className="btn btn--white btn--lg">

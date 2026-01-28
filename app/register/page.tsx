@@ -249,7 +249,7 @@ export default function RegisterPage() {
                                                 color: 'var(--color-slate)',
                                                 marginBottom: 'var(--space-8)'
                                             }}>
-                                                Join Rooted to find meaningful connection.
+                                                Join Align to find meaningful connection.
                                             </p>
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
@@ -379,7 +379,7 @@ export default function RegisterPage() {
                                                 color: 'var(--color-slate)',
                                                 marginBottom: 'var(--space-8)'
                                             }}>
-                                                Rooted is built on the principles from Thomas Marks' book.
+                                                Align is built on the principles from Thomas Marks' book.
                                             </p>
 
                                             <div style={{
@@ -448,7 +448,7 @@ export default function RegisterPage() {
                                                         disabled={isLoading}
                                                     />
                                                     <span>
-                                                        I understand that Rooted is built on the Six Pillars framework and that preparation
+                                                        I understand that Align is built on the Six Pillars framework and that preparation
                                                         comes before connection.
                                                     </span>
                                                 </label>

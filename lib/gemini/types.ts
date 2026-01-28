@@ -1,6 +1,6 @@
 /**
  * Gemini AI Integration Types
- * Type definitions for AI-powered features in the Rooted platform
+ * Type definitions for AI-powered features in the Align platform
  */
 
 // Six Pillars Enumeration

@@ -15,7 +15,7 @@ export default function PhotoPolicy() {
                             color: 'var(--color-slate)',
                             marginBottom: 'var(--space-6)',
                         }}>
-                            Unlike other platforms, photos are not shown initially on Rooted.
+                            Unlike other platforms, photos are not shown initially on Align.
                             This is intentional—we want you to connect based on character, values,
                             and pillar alignment first.
                         </p>

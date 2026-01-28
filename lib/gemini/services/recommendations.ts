@@ -73,7 +73,7 @@ function buildRecommendationsPrompt(context: RecommendationContext): string {
   const sortedPillars = pillarEntries.sort((a, b) => a[1] - b[1])
   const weakestPillars = sortedPillars.slice(0, 3)
 
-  return `You are a personal development coach for Rooted, a Christian dating platform focused on the Six Pillars framework for relationship readiness.
+  return `You are a personal development coach for Align, a Christian dating platform focused on the Six Pillars framework for relationship readiness.
 
 Analyze this user's profile and provide personalized growth recommendations:
 

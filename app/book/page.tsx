@@ -58,7 +58,7 @@ export default function BookPage() {
                                     fontSize: 'var(--text-sm)',
                                 }}>
                                     <BookOpen size={16} />
-                                    The Foundation of Rooted
+                                    The Foundation of Align
                                 </div>
                                 <h1 style={{ marginBottom: 'var(--space-2)' }}>Relationship Fitness</h1>
                                 <p style={{
@@ -84,7 +84,7 @@ export default function BookPage() {
                                         <ExternalLink size={18} />
                                     </a>
                                     <Link href="/register" className="btn btn--outline-white btn--lg">
-                                        Join Rooted
+                                        Join Align
                                     </Link>
                                 </div>
                             </div>

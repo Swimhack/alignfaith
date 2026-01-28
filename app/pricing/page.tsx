@@ -139,7 +139,7 @@ export default function PricingPage() {
                                     }}>
                                         Every paid membership includes a physical copy of &quot;Relationship Fitness&quot;
                                         shipped directly to your door at no extra cost. Start your journey with the
-                                        foundation that makes Rooted different.
+                                        foundation that makes Align different.
                                     </p>
                                 </div>
                             </div>

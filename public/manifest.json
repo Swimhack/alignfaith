@@ -1,7 +1,7 @@
 {
-    "name": "Rooted Alignment",
-    "short_name": "Rooted Alignment",
-    "description": "Rooted Alignment - A framework for growth and meaningful connection",
+    "name": "Align",
+    "short_name": "Align",
+    "description": "Align - A framework for growth and meaningful connection",
     "start_url": "/",
     "display": "standalone",
     "theme_color": "#1B5E20",

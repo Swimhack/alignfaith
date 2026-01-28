@@ -24,7 +24,7 @@ export default function CTASection() {
                     </div>
 
                     <h2 className="cta-section__title">
-                        Ready to Be <span className="cta-section__title-accent">Rooted</span>?
+                        Ready to Be <span className="cta-section__title-accent">Align</span>?
                     </h2>
 
                     <p className="cta-section__description">

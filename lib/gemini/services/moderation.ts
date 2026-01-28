@@ -109,7 +109,7 @@ function buildModerationPrompt(content: string, contentType: ContentType): strin
     comment: 'a comment on shared content',
   }
 
-  return `You are a content moderator for Rooted, a Christian dating platform focused on personal growth and faith-based relationships.
+  return `You are a content moderator for Align, a Christian dating platform focused on personal growth and faith-based relationships.
 
 Review the following ${contextMap[contentType]} for appropriateness:
 

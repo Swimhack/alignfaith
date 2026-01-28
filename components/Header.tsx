@@ -72,7 +72,7 @@ export default function Header() {
                 <Link href="/" className="header__logo" onClick={closeMenu}>
                     <Image
                         src="/images/logo.png"
-                        alt="Rooted Alignment"
+                        alt="Align"
                         width={100}
                         height={130}
                         priority
