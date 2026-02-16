@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -38,8 +38,13 @@ function LoginForm() {
             if (result?.error) {
                 setError('Invalid email or password')
             } else {
-                // Redirect to dashboard or profile setup
-                router.push('/dashboard')
+                // Check if password change is required
+                const session = await getSession()
+                if (session?.user?.mustChangePassword) {
+                    router.push('/change-password')
+                } else {
+                    router.push('/dashboard')
+                }
                 router.refresh()
             }
         } catch {

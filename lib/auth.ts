@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           tier: user.tier,
           profileComplete: user.profile?.isComplete ?? false,
+          mustChangePassword: user.mustChangePassword,
         }
       },
     }),
@@ -68,12 +69,14 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.tier = user.tier
         token.profileComplete = user.profileComplete
+        token.mustChangePassword = user.mustChangePassword
       }
 
       // Handle session updates (e.g., after profile completion or tier change)
       if (trigger === 'update' && session) {
         if (session.tier !== undefined) token.tier = session.tier
         if (session.profileComplete !== undefined) token.profileComplete = session.profileComplete
+        if (session.mustChangePassword !== undefined) token.mustChangePassword = session.mustChangePassword
       }
 
       return token
@@ -84,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string
         session.user.tier = token.tier as string
         session.user.profileComplete = token.profileComplete as boolean
+        session.user.mustChangePassword = token.mustChangePassword as boolean
       }
       return session
     },

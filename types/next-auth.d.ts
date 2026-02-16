@@ -10,6 +10,7 @@ declare module 'next-auth' {
       role: string
       tier: string
       profileComplete: boolean
+      mustChangePassword: boolean
     }
   }
 
@@ -20,6 +21,7 @@ declare module 'next-auth' {
     role: string
     tier: string
     profileComplete: boolean
+    mustChangePassword: boolean
   }
 }
 
@@ -29,5 +31,6 @@ declare module 'next-auth/jwt' {
     role: string
     tier: string
     profileComplete: boolean
+    mustChangePassword: boolean
   }
 }

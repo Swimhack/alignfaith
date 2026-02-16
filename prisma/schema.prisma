@@ -111,8 +111,9 @@ enum AnnouncementTarget {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  emailVerified DateTime?
-  passwordHash  String?
+  emailVerified      DateTime?
+  passwordHash       String?
+  mustChangePassword Boolean   @default(false)
 
   // Profile link
   profile Profile?
