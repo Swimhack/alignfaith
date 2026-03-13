@@ -28,6 +28,7 @@ export default function AdminSidebar({ pendingPhotos = 0, openReports = 0, pendi
     { label: 'Matching', href: '/admin/matching', icon: '⊛' },
     { label: 'Analytics', href: '/admin/analytics', icon: '⊡' },
     { label: 'Subscriptions', href: '/admin/subscriptions', icon: '⊜' },
+    { label: 'Pages', href: '/admin/pages', icon: '⊠' },
     { label: 'Communications', href: '/admin/communications', icon: '⊙' },
     { label: 'Community', href: '/admin/community', icon: '⊚' },
     { label: 'Settings', href: '/admin/settings', icon: '⊗' },
